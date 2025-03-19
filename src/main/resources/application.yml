@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/online_store
+    password: postgres
+    username: postgres
+  flyway:
+    locations: classpath:db/migration
+    enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  mvc:
+    servlet:
+      path: /api/v1
