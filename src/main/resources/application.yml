@@ -9,6 +9,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-  mvc:
-    servlet:
-      path: /api/v1
+server:
+  servlet:
+    context-path: /api/v1
+
+application:
+  jwt:
+    secret: #
+    expiration-time: #
