@@ -33,6 +33,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET,"/products").permitAll()
                         .requestMatchers("/products/**").hasAnyRole("MANAGER", "ADMIN")
                         .requestMatchers("/orders/**").hasRole("USER")
                         .requestMatchers(HttpMethod.DELETE, "/users/**").hasAnyRole("MANAGER", "ADMIN")
