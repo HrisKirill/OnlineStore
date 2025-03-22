@@ -13,5 +13,5 @@ public class ProductCreateRequestDto {
     private String name;
     private String description;
     private BigDecimal price;
-    private Long stockQuantity;
+    private Integer stockQuantity;
 }

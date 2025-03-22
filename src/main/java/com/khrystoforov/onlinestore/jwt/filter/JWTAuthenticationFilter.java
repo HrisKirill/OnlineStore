@@ -40,8 +40,7 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (Exception ex) {
-            log.error("Could not set user authentication");
-            throw new RuntimeException("Could not set user authentication");
+            throw new RuntimeException(ex);
         }
     }
 

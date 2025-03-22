@@ -1,6 +1,7 @@
 package com.khrystoforov.onlinestore.exception.handler;
 
 import com.khrystoforov.onlinestore.exception.ErrorResponse;
+import com.khrystoforov.onlinestore.exception.ProductQuantityException;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,12 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage());
     }
 
+    @ExceptionHandler(ProductQuantityException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleException(ProductQuantityException ex) {
+        log.error(ex.getMessage());
+        return new ErrorResponse(HttpStatus.NOT_FOUND.value(), ex.getMessage());
+    }
 
     @ExceptionHandler(Throwable.class)
     public ErrorResponse handleException(Throwable ex) {

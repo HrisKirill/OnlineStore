@@ -13,4 +13,6 @@ public interface UserService {
     boolean existsByEmail(String email);
 
     User getUserByEmail(String email);
+
+    User getCurrentUser();
 }
