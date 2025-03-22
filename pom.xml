@@ -13,6 +13,7 @@
     <version>0.0.1-SNAPSHOT</version>
     <name>OnlineStore</name>
     <description>OnlineStore</description>
+    <packaging>jar</packaging>
     <url/>
     <licenses>
         <license/>
