@@ -29,6 +29,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void register(RegisterRequestDto registerRequest) {
+        log.info("Register user with email {}", registerRequest.getEmail());
         if (userService.existsByEmail(registerRequest.getEmail())) {
             throw new EntityExistsException("Email is already exist!");
         }
@@ -45,6 +46,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public JWTTokenResponse login(LoginRequestDto loginRequest) {
+        log.info("Login user with email {}", loginRequest.getEmail());
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getEmail(),
@@ -53,7 +55,6 @@ public class AuthServiceImpl implements AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = "Bearer " + jwtTokenservice.generateToken(authentication);
-        log.info("logging with [{}]", authentication.getPrincipal());
         return new JWTTokenResponse(jwt);
     }
 }

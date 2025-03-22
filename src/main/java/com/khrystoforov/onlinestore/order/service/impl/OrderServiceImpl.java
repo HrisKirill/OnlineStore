@@ -11,6 +11,7 @@ import com.khrystoforov.onlinestore.product.service.ProductService;
 import com.khrystoforov.onlinestore.user.model.User;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +22,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
@@ -28,6 +30,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order addProductsToOrder(User owner, String productName, Integer quantity) {
+        log.info("Add product {} with quantity {} to order for user {}", productName, quantity, owner.getId());
         Product product = productService.getProductByName(productName);
         if (product.getStockQuantity() < quantity) {
             throw new ProductQuantityException(String.format("The number of products [%d] in stock is less than in the request [%d]",
@@ -61,7 +64,7 @@ public class OrderServiceImpl implements OrderService {
         return orderRepository.save(order);
     }
 
-    public Optional<OrderItem> findOrderItemWithProduct(Order order, Product product) {
+    private Optional<OrderItem> findOrderItemWithProduct(Order order, Product product) {
         List<OrderItem> itemList = order.getOrderItems();
         for (OrderItem item :
                 itemList) {
@@ -74,24 +77,28 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Order getOrderByStatusAndOwnerOrCreateIfNotExist(OrderStatus status, User owner) {
+        log.info("Get order by status {} and owner {} or create if not exist", status, owner.getId());
         return orderRepository.findOrderByStatusAndOwnerId(status, owner.getId())
                 .orElseGet(() -> orderRepository.save(new Order(owner)));
     }
 
     @Override
     public Order getOrderByOwnerAndId(User owner, UUID id) {
+        log.info("Get order by owner {} and id {}", owner.getId(), id);
         return orderRepository.findOrderByIdAndOwnerId(id, owner.getId())
                 .orElseThrow(() -> new EntityNotFoundException(String.format("Order is not exist with id %s for user %d", id, owner.getId())));
     }
 
     @Override
     public List<Order> getAllUserOrders(User owner) {
+        log.info("Get all orders for user {}", owner.getId());
         return orderRepository.findAllByOwnerId(owner.getId());
     }
 
     @Override
     @Transactional
     public void cancelUnpaidUserOrder(User owner) {
+        log.info("Cancel unpaid order for user {}", owner.getId());
         Order order = orderRepository.findOrderByStatusAndOwnerId(OrderStatus.UNPAID, owner.getId())
                 .orElseThrow(() -> new EntityNotFoundException(String.format("Order not found for user %d", owner.getId())));
         List<Product> products = new ArrayList<>();
@@ -113,6 +120,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public void payForOrder(User owner) {
+        log.info("Pay order for user {}", owner.getId());
         orderRepository.updateUnpaidOrderToPaid(owner.getId(), OrderStatus.UNPAID, OrderStatus.PAID);
     }
 
