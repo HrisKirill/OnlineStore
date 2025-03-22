@@ -4,7 +4,9 @@ import com.khrystoforov.onlinestore.exception.ErrorResponse;
 import com.khrystoforov.onlinestore.exception.ProductQuantityException;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -12,7 +14,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 @Slf4j
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+    private final Environment environment;
 
     @ExceptionHandler(EntityNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -38,7 +42,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Throwable.class)
     public ErrorResponse handleException(Throwable ex) {
         log.error(ex.getMessage());
-        return new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage());
+        boolean isProduction = environment.matchesProfiles("production");
+        return new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), isProduction ? "" : ex.getMessage());
     }
 
 }
