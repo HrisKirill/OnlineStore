@@ -15,6 +15,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,11 +33,13 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "orders")
+@Builder
 @Getter
 @Setter
 @EqualsAndHashCode(exclude = {"owner", "orderItems"})
 @ToString(exclude = {"owner", "orderItems"})
 @EntityListeners(AuditingEntityListener.class)
+@AllArgsConstructor
 @NoArgsConstructor
 public class Order {
     @Id
