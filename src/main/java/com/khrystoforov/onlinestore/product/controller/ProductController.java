@@ -7,8 +7,10 @@ import com.khrystoforov.onlinestore.product.model.Product;
 import com.khrystoforov.onlinestore.product.service.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,7 +34,7 @@ public class ProductController {
         return ProductMapper.toResponseDto(productService.createProduct(dto));
     }
     @GetMapping
-    public Page<ProductResponseDto> getProducts(Pageable pageable){
+    public Page<ProductResponseDto> getProducts(@ParameterObject @PageableDefault Pageable pageable){
         Page<Product> products = productService.findAllProducts(pageable);
         return products.map(ProductMapper::toResponseDto);
     }
