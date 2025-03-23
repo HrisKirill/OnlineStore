@@ -37,3 +37,12 @@ CREATE TABLE order_items
     FOREIGN KEY (order_id) REFERENCES orders (id) ON DELETE CASCADE,
     FOREIGN KEY (product_id) REFERENCES products (id) ON DELETE CASCADE
 );
+
+CREATE TABLE refresh_tokens
+(
+    id         UUID PRIMARY KEY,
+    user_id    BIGSERIAL NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);

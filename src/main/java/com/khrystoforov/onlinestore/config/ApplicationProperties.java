@@ -9,7 +9,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Data
 public class ApplicationProperties {
     private final JWTInfo jwt;
+    private final RefreshTokenInfo refreshToken;
 
     public record JWTInfo(String secret, Long expirationTime) {
+    }
+
+    public record RefreshTokenInfo(Long expirationTime) {
     }
 }

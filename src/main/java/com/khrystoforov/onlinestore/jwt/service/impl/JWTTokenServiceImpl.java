@@ -11,7 +11,6 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -24,10 +23,9 @@ public class JWTTokenServiceImpl implements JWTTokenService {
     private final ApplicationProperties properties;
 
     @Override
-    public String generateToken(Authentication authentication) {
+    public String generateToken(User user) {
         ApplicationProperties.JWTInfo jwtInfo = properties.getJwt();
         String secret = jwtInfo.secret();
-        User user = (User) authentication.getPrincipal();
         Date now = new Date(System.currentTimeMillis());
         Date expiryDate = new Date(now.getTime() + jwtInfo.expirationTime());
         Claims claims = Jwts.claims()
