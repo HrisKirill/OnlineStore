@@ -69,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setUser(user);
         refreshToken.setExpiresAt(LocalDateTime.now().plus(refreshTokenInfo.expirationTime(), ChronoUnit.MILLIS));
-        refreshTokenService.createRefreshToken(refreshToken);
+        refreshToken = refreshTokenService.createRefreshToken(refreshToken);
         return new AuthenticationResponseDto(jwt, refreshToken.getId());
     }
 

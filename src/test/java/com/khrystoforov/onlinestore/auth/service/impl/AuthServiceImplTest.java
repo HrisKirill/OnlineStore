@@ -2,10 +2,15 @@ package com.khrystoforov.onlinestore.auth.service.impl;
 
 import com.khrystoforov.onlinestore.auth.dto.request.LoginRequestDto;
 import com.khrystoforov.onlinestore.auth.dto.request.RegisterRequestDto;
-import com.khrystoforov.onlinestore.jwt.dto.response.JWTTokenResponse;
+import com.khrystoforov.onlinestore.auth.dto.response.AuthenticationResponseDto;
+import com.khrystoforov.onlinestore.config.ApplicationProperties;
 import com.khrystoforov.onlinestore.jwt.service.JWTTokenService;
+import com.khrystoforov.onlinestore.refreshToken.model.RefreshToken;
+import com.khrystoforov.onlinestore.refreshToken.service.RefreshTokenService;
+import com.khrystoforov.onlinestore.user.model.User;
 import com.khrystoforov.onlinestore.user.service.UserService;
 import jakarta.persistence.EntityExistsException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,12 +18,19 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 import static com.khrystoforov.onlinestore.util.EntityUtil.getTestUser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -34,6 +46,12 @@ class AuthServiceImplTest {
     private UserService userService;
     @Mock
     private JWTTokenService jwtTokenservice;
+    @Mock
+    private ApplicationProperties properties;
+    @Mock
+    private RefreshTokenService refreshTokenService;
+    @Mock
+    private ApplicationProperties.RefreshTokenInfo refreshTokenInfo;
     @InjectMocks
     private AuthServiceImpl authService;
 
@@ -52,10 +70,16 @@ class AuthServiceImplTest {
                 .build();
     }
 
+    @BeforeEach
+    void setUp() {
+        SecurityContext securityContext = mock(SecurityContext.class);
+        SecurityContextHolder.setContext(securityContext);
+    }
+
     @Test
     void testRegister() {
-        when(userService.existsByEmail(getTestRegisterRequest().getEmail())).thenReturn(false);
-        when(passwordEncoder.encode(getTestRegisterRequest().getPassword())).thenReturn(getTestUser().getPassword());
+        when(userService.existsByEmail(anyString())).thenReturn(false);
+        when(passwordEncoder.encode(anyString())).thenReturn(getTestUser().getPassword());
 
         authService.register(getTestRegisterRequest());
         verify(userService, times(1)).createUser(getTestUser());
@@ -63,20 +87,57 @@ class AuthServiceImplTest {
 
     @Test
     void testRegisterUserExists() {
-        when(userService.existsByEmail(getTestRegisterRequest().getEmail())).thenReturn(true);
+        when(userService.existsByEmail(anyString())).thenReturn(true);
         assertThrows(EntityExistsException.class, () -> authService.register(getTestRegisterRequest()));
     }
 
 
     @Test
     void testLogin() {
-        Authentication authentication = mock(Authentication.class);
         String jwt = "mocked_jwt";
+        UUID refreshTokenId = UUID.randomUUID();
+        User user = mock(User.class);
+        Authentication authentication = mock(Authentication.class);
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setId(refreshTokenId);
+
+        when(properties.getRefreshToken()).thenReturn(refreshTokenInfo);
+        when(refreshTokenInfo.expirationTime()).thenReturn(3600000L);
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
-        when(jwtTokenservice.generateToken(authentication)).thenReturn(jwt);
+        when(authentication.getPrincipal()).thenReturn(user);
+        when(jwtTokenservice.generateToken(user)).thenReturn(jwt);
+        when(refreshTokenService.createRefreshToken(any(RefreshToken.class))).thenReturn(refreshToken);
 
-        JWTTokenResponse response = authService.login(getTestLoginRequest());
+        AuthenticationResponseDto response = authService.login(getTestLoginRequest());
 
-        assertEquals("Bearer " + jwt, response.getToken());
+        assertEquals(jwt, response.getAccessToken());
+        assertEquals(refreshTokenId, response.getRefreshToken());
+        verify(refreshTokenService).createRefreshToken(any(RefreshToken.class));
+    }
+
+    @Test
+    void testRefreshToken() {
+        UUID refreshTokenId = UUID.randomUUID();
+        String jwt = "mocked_jwt";
+        User mockUser = mock(User.class);
+        RefreshToken mockRefreshToken = mock(RefreshToken.class);
+
+        when(mockRefreshToken.getUser()).thenReturn(mockUser);
+        when(mockRefreshToken.getId()).thenReturn(refreshTokenId);
+        when(refreshTokenService.findByIdAndExpiresAtAfter(eq(refreshTokenId), any(LocalDateTime.class)))
+                .thenReturn(mockRefreshToken);
+        when(jwtTokenservice.generateToken(mockUser)).thenReturn(jwt);
+
+        AuthenticationResponseDto response = authService.refreshToken(refreshTokenId);
+
+        assertEquals(jwt, response.getAccessToken());
+        assertEquals(refreshTokenId, response.getRefreshToken());
+    }
+
+    @Test
+    void revokeUserRefreshToken_ShouldCallServiceMethod() {
+        User mockUser = mock(User.class);
+        authService.revokeUserRefreshToken(mockUser);
+        verify(refreshTokenService).revokeUserRefreshToken(mockUser);
     }
 }
